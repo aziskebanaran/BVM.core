@@ -11,9 +11,9 @@ import (
 	"crypto/x509"
 	"encoding/hex"
 	"fmt"
+	"math/big"
 	"os"
  	"encoding/json" // Hanya untuk simpan file lokal saja
-	"strings"
 	"github.com/tyler-smith/go-bip39"
 )
 
@@ -163,37 +163,46 @@ func LoadOrCreate(filename string) (*BVMWallet, error) {
     return newW, nil
 }
 
+
 func CreateFromMnemonic(mnemonic string, index int) (*BVMWallet, error) {
-    // 1. Validasi Mnemonic
     if !bip39.IsMnemonicValid(mnemonic) {
         return nil, fmt.Errorf("mnemonic tidak valid")
     }
 
-    // 2. Generate Seed (Seed adalah akar dari pohon kunci Sultan)
-    seed := bip39.NewSeed(mnemonic, "") 
+    // 1. Generate Seed
+    seed := bip39.NewSeed(mnemonic, "")
 
-    // 3. Derivasi Kunci (Deterministic)
-    // Menggunakan SHA256 agar Mnemonic + Index selalu menghasilkan Private Key yang sama
+    // 2. Buat Hash dari Seed + Index (Agar deterministik)
     combined := append(seed, []byte(fmt.Sprintf("%d", index))...)
     hashPriv := sha256.Sum256(combined)
 
-    // 4. Bangkitkan Kunci P256
-    privKey, _ := ecdsa.GenerateKey(elliptic.P256(), strings.NewReader(string(hashPriv[:])))
+    // 3. Bangkitkan Kunci P256 secara Manual & Aman
+    // Kita buat struct PrivateKey kosong lalu isi nilai D-nya dengan hash kita
+    privKey := new(ecdsa.PrivateKey)
+    privKey.Curve = elliptic.P256()
 
-    privBytes, _ := x509.MarshalECPrivateKey(privKey)
-    pubBytes, _ := x509.MarshalPKIXPublicKey(&privKey.PublicKey)
+    // Gunakan math/big untuk mengubah hash menjadi angka besar
+    privKey.D = new(big.Int).SetBytes(hashPriv[:])
 
-    // 5. Buat Address Unik bvmf...
+    // Hitung koordinat X dan Y (Public Key) secara matematis berdasarkan D
+    privKey.PublicKey.X, privKey.PublicKey.Y = privKey.Curve.ScalarBaseMult(hashPriv[:])
+
+    // 4. Proses Marshal (Sekarang DIJAMIN tidak nil)
+    privBytes, err := x509.MarshalECPrivateKey(privKey)
+    if err != nil { return nil, err }
+
+    pubBytes, err := x509.MarshalPKIXPublicKey(&privKey.PublicKey)
+    if err != nil { return nil, err }
+
     hash := sha256.Sum256(pubBytes)
     address := fmt.Sprintf("bvmf%s", hex.EncodeToString(hash[:10]))
 
-    // 🚩 KEMBALIKAN STRUCT LENGKAP
     return &BVMWallet{
-        Mnemonic:   mnemonic,               // Simpan mnemoniknya
+        Mnemonic:   mnemonic,
         PrivateKey: hex.EncodeToString(privBytes),
         PublicKey:  hex.EncodeToString(pubBytes),
         Address:    address,
-        Nonce:      0,                      // Inisialisasi Nonce ke nol
+        Nonce:      0,
     }, nil
 }
 

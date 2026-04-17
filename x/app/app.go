@@ -20,6 +20,7 @@ import (
 	stakingkeeper "github.com/aziskebanaran/bvm-core/x/staking/keeper"
 	wasmkeeper "github.com/aziskebanaran/bvm-core/x/wasm/keeper"
         storagekeeper "github.com/aziskebanaran/bvm-core/x/storage/keeper"
+	factorykeeper "github.com/aziskebanaran/bvm-core/x/factory/keeper"
 )
 
 type BaseApp struct {
@@ -37,6 +38,7 @@ type BaseApp struct {
 	Blockchain *types.Blockchain
 	P2P        x.P2PKeeper      // 🚩 Gunakan interface x.P2PKeeper
         StorageKeeper x.StorageModuleKeeper
+	FactoryKeeper x.FactoryKeeper
 }
 
 func NewApp(store storage.BVMStore, bc *types.Blockchain) *BaseApp {
@@ -61,6 +63,8 @@ func NewApp(store storage.BVMStore, bc *types.Blockchain) *BaseApp {
 
         storageK := storagekeeper.NewStorageKeeper(store)
 
+	factoryK := factorykeeper.NewFactoryKeeper(store, bankK)
+
         // 🚩 SEKARANG HANYA 9 ARGUMEN (Tanpa store.GetDB())
         bvmK := bvmkeeper.NewKeeper(
                 store,         // 1. BVMStore
@@ -74,6 +78,7 @@ func NewApp(store storage.BVMStore, bc *types.Blockchain) *BaseApp {
                 wasmK,         // 8. Wasm
                 p2pK,          // 9. P2P
 		storageK,      // 11 🚩
+		factoryK,
         )
 
         minerE := miner.NewMinerEngine(bvmK)
@@ -90,6 +95,7 @@ func NewApp(store storage.BVMStore, bc *types.Blockchain) *BaseApp {
                 Blockchain: bc,
                 P2P:        p2pK,
 		StorageKeeper: storageK,
+		FactoryKeeper: factoryK,
         }
 }
 

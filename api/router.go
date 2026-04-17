@@ -74,6 +74,13 @@ func NewRouter(k x.BVMKeeper, mp x.MempoolKeeper, store storage.BVMStore, nodeAd
         // --- 9. IDENTITY & AUTH SYSTEM ---
         mux.HandleFunc("/api/login", HandleLogin(k)) // Pintu masuk utama untuk JWT
 
+	// --- 10. LAYER 2 BRIDGE (Nexus Dock) ---
+	mux.HandleFunc("/api/anchor", HandleL2Anchor(k))
+	mux.HandleFunc("/api/nexus/token-sync", HandleNexusTokenReport(k))
+	mux.HandleFunc("/api/nexus/sync-token", HandleSyncNexusToken(k))
+	mux.HandleFunc("/api/factory/register", HandleRegisterNexus(k)) // 🚩 Tambahkan Pintu Ini!
+
+
 	// --- 5. INFO NODE (Root API) ---
 	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/api/" || r.URL.Path == "/api" {

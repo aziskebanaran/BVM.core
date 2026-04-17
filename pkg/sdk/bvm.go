@@ -69,3 +69,18 @@ func stringToPtr(s string) (uint32, uint32) {
 func PtrToString(ptr uint32, size uint32) string {
     return unsafe.String((*byte)(unsafe.Pointer(uintptr(ptr))), size)
 }
+
+//go:wasmimport env register_nexus
+func host_register_nexus(idP, idS, ownP, ownS, tokP, tokS uint32, stake uint64) uint32
+
+//go:wasmimport env lock_for_bridge
+func host_lock_for_bridge(fP, fS, tP, tS uint32, am uint64) uint32
+
+// --- WRAPPER NYA ---
+
+func RegisterNexus(id, owner, token string, stake uint64) bool {
+    iP, iS := stringToPtr(id)
+    oP, oS := stringToPtr(owner)
+    tP, tS := stringToPtr(token)
+    return host_register_nexus(iP, iS, oP, oS, tP, tS, stake) == 1
+}

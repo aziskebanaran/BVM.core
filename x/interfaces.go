@@ -9,6 +9,7 @@ import (
     wasmtypes    "github.com/aziskebanaran/bvm-core/x/wasm/types"
     authtypes    "github.com/aziskebanaran/bvm-core/x/auth/types" 
     storagetypes "github.com/aziskebanaran/bvm-core/x/storage/types"
+    factorytypes "github.com/aziskebanaran/bvm-core/x/factory/types"
 )
 
 // ParamsKeeper: Kontrak Konstitusi Ekonomi BVM
@@ -148,8 +149,14 @@ type BVMKeeper interface {
     GetP2P() P2PKeeper
     GetWasm() WasmKeeper
     GetPendingTransactions() []types.Transaction
-
+    GetFactory() FactoryKeeper
     GetCloudStorage() StorageModuleKeeper
+}
+
+type FactoryKeeper interface {
+    RegisterNexus(chain factorytypes.AppChain) error           // 🚩 Gunakan Alias
+    GetNexus(id string) (*factorytypes.AppChain, error)      // 🚩 Gunakan Alias
+    RecordAnchor(id string, height int64) error
 }
 
 // MiningKeeper: Kini murni sebagai 'Kontrak Perhitungan'
