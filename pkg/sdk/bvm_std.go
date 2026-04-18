@@ -38,25 +38,29 @@ func RegisterNexus(id, owner, token string, stake uint64) bool {
 	return true
 }
 
+func LockForBridgeWithMemo(from, to string, amount uint64, memo string) bool {
+    c := client.NewBVMClient(CoreURL)
+    w, _ := wallet.LoadWallet("./nexus_operator.json")
+
+    tx, err := w.SignAndPack(c, to, amount, "BVM", memo)
+    if err != nil { 
+        fmt.Printf("❌ [SDK-ERR] Gagal Sign: %v\n", err)
+        return false 
+    }
+
+    txID, err := c.BroadcastTX(tx)
+    if err != nil {
+        fmt.Printf("❌ [SDK-ERR] Node Menolak: %v\n", err)
+        return false
+    }
+
+    fmt.Printf("✅ [SDK] Anchor Sah! TXID: %s | Memo: %s\n", txID, memo)
+    return true
+}
+
+// Fungsi lama tetap ada agar Nexus versi lama tidak crash
 func LockForBridge(from, to string, amount uint64) bool {
-	fmt.Printf("🔗 [SDK-STD] Menjalankan Anchor Bridge: %d unit...\n", amount)
-
-	c := client.NewBVMClient(CoreURL)
-	w, err := wallet.LoadWallet("./nexus_operator.json")
-	if err != nil { return false }
-
-	// Kirim aset ke target bridge (misal vault anchor)
-	tx, err := w.SignAndPack(c, to, amount, "BVM", "Nexus L2 Anchor")
-	if err != nil { return false }
-
-	txID, err := c.BroadcastTX(tx)
-	if err != nil {
-		fmt.Printf("❌ [SDK-ERR] Bridge Gagal: %v\n", err)
-		return false
-	}
-
-	fmt.Printf("✅ [SDK-STD] Anchor Berhasil! TXID: %s\n", txID)
-	return true
+    return LockForBridgeWithMemo(from, to, amount, "L2_ANCHOR_SIMPLE")
 }
 
 // Fungsi dummy lainnya tetap biarkan agar tidak error saat compile
