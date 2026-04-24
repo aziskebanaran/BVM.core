@@ -22,9 +22,9 @@ jobs:
         run: |
           go mod tidy
           # Build untuk PC (AMD64)
-          GOOS=linux GOARCH=amd64 go build -o bvm-amd64 ./cmd/bvm/
+          GOOS=linux GOARCH=amd64 go build -o bvm-amd64 ./cmd/bvm
           # Build untuk HP/Termux (ARM64)
-          GOOS=linux GOARCH=arm64 go build -o bvm-arm64 ./cmd/bvm/
+          GOOS=linux GOARCH=arm64 go build -o bvm-arm64 ./cmd/bvm
 
           # Bungkus keduanya dalam satu ZIP
           zip bvm-releases.zip bvm-amd64 bvm-arm64
