@@ -1,0 +1,23 @@
+name: BVM Super-App Release
+on:
+  push:
+    tags:
+      - 'v*'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+      - name: Build
+        run: |
+          go build -o bvm ./cmd/bvm/main.go
+          zip bvm-linux.zip bvm build/*.wasm
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: bvm-linux.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
