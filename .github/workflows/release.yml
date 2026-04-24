@@ -1,23 +1,41 @@
 name: BVM Super-App Release
+
 on:
   push:
     tags:
       - 'v*'
+
 jobs:
-  build:
+  build-and-release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4 # Update ke v4 (Node 24)
+
+      - name: Setup Go
+        uses: actions/setup-go@v5 # Update ke v5 (Node 24)
         with:
           go-version: '1.21'
-      - name: Build
+
+      - name: Build BVM
         run: |
+          # Pastikan folder build ada agar zip tidak error
+          mkdir -p build
+          # Kompilasi biner utama
           go build -o bvm ./cmd/bvm/main.go
-          zip bvm-linux.zip bvm build/*.wasm
-      - name: Release
-        uses: softprops/action-gh-release@v1
+          # Beri izin eksekusi
+          chmod +x bvm
+          # Buat ZIP dengan proteksi jika folder build kosong
+          zip -r bvm-linux-amd64.zip bvm build/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2 # Update ke v2
         with:
-          files: bvm-linux.zip
+          files: bvm-linux-amd64.zip
+          tag_name: ${{ github.ref_name }}
+          name: BVM Super-App ${{ github.ref_name }}
+          body: |
+            🚀 **BVM Super-App: Era Modern**
+            Biner ini siap dijalankan di Linux/Termux.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
