@@ -1,6 +1,5 @@
 data/
-*.log
-CURRENT
-LOCK
-MANIFEST-*
 node_wallet.json
+session.jwt
+bvm
+bvm-core

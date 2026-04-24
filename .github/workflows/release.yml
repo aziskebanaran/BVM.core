@@ -21,7 +21,7 @@ jobs:
       - name: Sync & Build
         run: |
           go mod tidy
-          go build -o bvm ./cmd/bvm/main.go
+          go build -o bvm ./cmd/bvm
           zip bvm-linux.zip bvm
 
       - name: Publish
