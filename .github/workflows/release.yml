@@ -1,49 +1,32 @@
-name: BVM Super-App Release
-
+name: Release
 on:
   push:
     tags:
       - 'v*'
 
 jobs:
-  build-and-release:
+  build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # PENTING: Memberi izin GitHub untuk menulis rilis
+      contents: write
     steps:
-      - name: Checkout Code
+      - name: Check Out
         uses: actions/checkout@v4
 
-      - name: Setup Go
+      - name: Set Up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
 
-      - name: Build BVM Binary
+      - name: Compile
         run: |
-          # 1. Kompilasi biner utama
           go build -o bvm ./cmd/bvm/main.go
-          chmod +x bvm
-          
-          # 2. Buat folder distribusi sementara agar rapi
-          mkdir -p dist
-          cp bvm dist/
-          
-          # 3. Salin file WASM jika ada (menggunakan wildcard agar tidak error jika kosong)
-          cp build/*.wasm dist/ 2>/dev/null || echo "No WASM files found, skipping..."
-          
-          # 4. Masuk ke folder dist dan buat ZIP
-          cd dist && zip -r ../bvm-linux-amd64.zip .
+          zip bvm-linux.zip bvm
+          # Kita abaikan dulu folder build/ untuk memastikan biner utama lolos
 
-      - name: Create GitHub Release
+      - name: Publish
         uses: softprops/action-gh-release@v2
         with:
-          files: bvm-linux-amd64.zip
-          name: BVM Super-App ${{ github.ref_name }}
-          body: |
-            🚀 **BVM Super-App: Platform OS Blockchain**
-            Status: Blok #6000+ Terlewati.
-            
-            Unduh biner di bawah untuk menjalankan Node, Wallet, dan App Manager.
+          files: bvm-linux.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
