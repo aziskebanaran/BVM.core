@@ -1,5 +1,3 @@
 data/
 node_wallet.json
 session.jwt
-bvm
-bvm-core
