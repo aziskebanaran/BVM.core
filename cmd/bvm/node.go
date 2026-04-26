@@ -16,11 +16,10 @@ import (
 )
 
 // getMinerAddress: Mengambil identitas miner secara dinamis dari file wallet
-func getMinerAddress() (string, error) {
-	// Pastikan Sultan menggunakan path yang konsisten (node_wallet.json)
-	walletPath := "node_wallet.json"
+func getMinerAddress(homeDir string) (string, error) {
+	// Konsolidasi: Selalu cari di dalam folder data (home)
+	walletPath := fmt.Sprintf("%s/node_wallet.json", homeDir)
 
-	// 1. Cek keberadaan file
 	if _, err := os.Stat(walletPath); os.IsNotExist(err) {
 		return "", fmt.Errorf("file %s tidak ditemukan", walletPath)
 	}
@@ -30,7 +29,6 @@ func getMinerAddress() (string, error) {
 		return "", fmt.Errorf("gagal membaca file wallet: %v", err)
 	}
 
-	// 2. Decode JSON
 	var w struct {
 		Address string `json:"address"`
 	}
@@ -38,7 +36,6 @@ func getMinerAddress() (string, error) {
 		return "", fmt.Errorf("format JSON wallet rusak: %v", err)
 	}
 
-	// 3. Validasi isi (Jangan sampai alamatnya kosong)
 	if w.Address == "" {
 		return "", fmt.Errorf("alamat di dalam wallet kosong")
 	}
@@ -46,53 +43,51 @@ func getMinerAddress() (string, error) {
 	return w.Address, nil
 }
 
-
 func startNodeProvider(cmd *cobra.Command, args []string) {
-	// 1. Ambil Flag: Cek apakah Sultan mengetik --miner atau -m
+	// 1. Ambil Flag Strategis
+	h, _ := cmd.Flags().GetString("home")
+	nexusURL, _ := cmd.Flags().GetString("nexus")
 	useMiner, _ := cmd.Flags().GetBool("miner")
 
-	logger.Info("SYSTEM", "🏗️  Inisialisasi BVM Engine Modular...")
+	logger.Info("SYSTEM", fmt.Sprintf("🏗️  Inisialisasi BVM di %s...", h))
 
-	// 2. DATABASE & STATE
-	store, err := storage.NewLevelDBStore("./data/blockchain_db", 8)
+	// 2. DATABASE & STATE (Mengikuti Jalur Home)
+	dbPath := fmt.Sprintf("%s/blockchain_db", h)
+	store, err := storage.NewLevelDBStore(dbPath, 8)
 	if err != nil {
-		logger.Error("SYSTEM", "Gagal membuka database: ", err)
+		logger.Error("SYSTEM", "🚨 Gagal membuka database: ", err)
 		panic(err)
 	}
 
-	nexusURL := "http://localhost:9092"
-        StartNodeWithSync(nexusURL, store)
+	// 3. JEMBATAN UDARA (Sinkronisasi Nexus via Flag)
+	StartNodeWithSync(nexusURL, store)
 
+	// 4. SETUP APP & KERNEL
 	bc := types.NewBlockchain()
 	bvmApp := app.NewApp(store, bc)
-
-	// 3. START KERNEL (Load Ledger & Sync)
 	bvmApp.Start()
 
+	// 5. MINER INTERNAL (Membaca Wallet dari Home)
+	if useMiner {
+		go func() {
+			time.Sleep(5 * time.Second)
+			logger.Success("MINER", "🏗️  Membangunkan Miner Internal Sultan...")
 
+			minerAddr, err := getMinerAddress(h)
+			if err != nil {
+				logger.Error("MINER", "🚨 KRITIKAL: Miner gagal aktif karena: ", err)
+				logger.Error("MINER", fmt.Sprintf("Silakan pastikan node_wallet.json tersedia di %s", h))
+				return
+			}
 
-        if useMiner {
-                go func() {
-                        time.Sleep(5 * time.Second)
-                        logger.Success("MINER", "🏗️  Membangunkan Miner Internal Sultan...")
+			logger.Info("MINER", "👷 Alamat Miner Aktif: "+minerAddr)
 
-                        // 🚩 PRO: Tidak ada hardcode sama sekali
-                        minerAddr, err := getMinerAddress()
-                        if err != nil {
-                                logger.Error("MINER", "🚨 KRITIKAL: Miner gagal aktif karena: ", err)
-                                logger.Error("MINER", "Silakan pastikan node_wallet.json sudah tersedia di folder.")
-                                return // Matikan goroutine miner jika tidak ada identitas sah
-                        }
+			engine := miner.NewMinerEngine(bvmApp.BVMKeeper)
+			engine.Start(minerAddr)
+		}()
+	}
 
-                        logger.Info("MINER", "👷 Alamat Miner Aktif: "+minerAddr)
-
-                        engine := miner.NewMinerEngine(bvmApp.BVMKeeper)
-                        engine.Start(minerAddr)
-                }()
-        }
-
-
-	// 5. JALANKAN SERVER API & P2P (Ini akan memblokir/hold proses)
+	// 6. JALANKAN FULL NODE
 	node.StartFullNode(
 		bvmApp.BVMKeeper,
 		bvmApp.Mempool,

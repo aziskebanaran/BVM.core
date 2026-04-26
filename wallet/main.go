@@ -15,51 +15,51 @@ import (
 const CORE_URL = "http://127.0.0.1:8080"
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("💡 Gunakan perintah: create, check, atau send")
-		return
-	}
+    if len(os.Args) < 2 {
+        fmt.Println("💡 Gunakan perintah: create, check, atau send")
+        return
+    }
 
-	bvm := client.NewBVMClient(CORE_URL)
-	command := os.Args[1]
+    // 🚩 PUSAT LOGISTIK TUNGGAL
+    const DATA_DIR = "../data"
+    walletPath := DATA_DIR + "/node_wallet.json"
 
-	// Helper untuk mencari dompet di berbagai lokasi
-	getWalletPath := func() string {
-		paths := []string{"../node_wallet.json", "node_wallet.json", "new_wallet.json"}
-		for _, p := range paths {
-			if _, err := os.Stat(p); err == nil {
-				return p
-			}
-		}
-		return "../node_wallet.json"
-	}
+    // Pastikan folder markas besar ada
+    os.MkdirAll(DATA_DIR, 0755)
 
-	switch command {
-        case "create":
-                // 🚩 SINKRONISASI: Tangkap 3 nilai (Wallet, Mnemonic, Error)
-                newWallet, mnemonic, err := wallet.CreateNewWallet()
-                if err != nil {
-                        fmt.Println("❌ Gagal membuat wallet:", err)
-                        return
-                }
+    bvm := client.NewBVMClient(CORE_URL)
+    command := os.Args[1]
 
-                walletPath := "../node_wallet.json"
-                // Coba simpan di folder parent, jika gagal simpan di folder lokal
-                if err := wallet.SaveWallet(newWallet, walletPath); err != nil {
-                        wallet.SaveWallet(newWallet, "node_wallet.json")
-                        walletPath = "node_wallet.json"
-                }
+    // Helper sederhana agar case-case di bawah tidak error
+    getWalletPath := func() string {
+        return walletPath
+    }
 
-                fmt.Println("--------------------------------------------------")
-                fmt.Printf("✨ WALLET BERHASIL DIPAHAT!\n")
-                fmt.Printf("👤 ADDRESS  : %s\n", newWallet.Address)
-                fmt.Printf("📂 DISIMPAN : %s\n", walletPath)
-                fmt.Println("--------------------------------------------------")
-                fmt.Println("⚠️  CATAT & SIMPAN 12 KATA RAHASIA INI:")
-                fmt.Printf("🔑 %s\n", mnemonic)
-                fmt.Println("--------------------------------------------------")
-                fmt.Println("NB: Mnemonic adalah satu-satunya cara memulihkan saldo emas Anda!")
+    switch command {
+    case "create":
+        newWallet, mnemonic, err := wallet.CreateNewWallet()
+        if err != nil {
+            fmt.Println("❌ Gagal membuat wallet:", err)
+            return
+        }
 
+        // Simpan langsung ke jalur pasti
+        if err := wallet.SaveWallet(newWallet, walletPath); err != nil {
+            fmt.Println("❌ Gagal simpan ke folder data:", err)
+            return
+        }
+
+        fmt.Println("--------------------------------------------------")
+        fmt.Printf("✨ WALLET BERHASIL DIPAHAT!\n")
+        fmt.Printf("👤 ADDRESS  : %s\n", newWallet.Address)
+        fmt.Printf("📂 DISIMPAN : %s\n", walletPath)
+        fmt.Println("--------------------------------------------------")
+        fmt.Println("⚠️  CATAT & SIMPAN 12 KATA RAHASIA INI:")
+        fmt.Printf("🔑 %s\n", mnemonic)
+        fmt.Println("--------------------------------------------------")
+        fmt.Println("NB: Mnemonic adalah satu-satunya cara memulihkan saldo emas Anda!")
+
+    // SISA CASE (register, check, send) TETAP SEPERTI ASLINYA...
 
 
 case "register":

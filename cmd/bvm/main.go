@@ -43,6 +43,7 @@ func main() {
 
 	// 🚩 FLAG PERSISTEN: Tersedia untuk SEMUA sub-command (Node, Wallet, Mempool, dll)
 	rootCmd.PersistentFlags().StringP("home", "H", "./data", "Jalur folder data utama (database & wallet)")
+	rootCmd.PersistentFlags().StringP("nexus", "n", "http://localhost:9092", "Alamat Nexus Server untuk sinkronisasi")
 
 	// ==========================================
 	// 1. SUB-COMMAND WALLET
