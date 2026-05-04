@@ -417,3 +417,25 @@ func (k *Keeper) extractUniqueWallets(txs []types.Transaction) int {
     }
     return len(wallets)
 }
+
+
+func (k *Keeper) InitSystemVaults() {
+    vaultAddr := "bvmf_market_system_vault"
+    
+    // 🚩 PERBAIKAN: Gunakan GetBalanceBVM untuk cek keberadaan
+    // Di BVM, jika saldo tidak ada di DB, dia akan mengembalikan 0.
+    // Kita cek apakah akun ini sudah pernah "disentuh" atau belum.
+    
+    currentBal := k.GetBalanceBVM(vaultAddr)
+    
+    // Jika saldo 0, kita inisialisasi agar alamat ini terdaftar di State
+    // Kita bisa melakukan SaveAccount untuk memastikannya tertulis di LevelDB
+    if currentBal == 0 {
+        err := k.SaveAccount(vaultAddr, 0) // Inisialisasi saldo 0
+        if err != nil {
+            logger.Error("SYSTEM", "❌ Gagal mengaktifkan Brankas Market: "+err.Error())
+        } else {
+            fmt.Printf("🏦 [SYSTEM] Brankas Market berhasil diaktifkan: %s\n", vaultAddr)
+        }
+    }
+}

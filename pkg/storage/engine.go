@@ -237,5 +237,20 @@ func (s *LevelDBStore) Scan(prefix string) (map[string]interface{}, error) {
     return results, nil
 }
 
+// Delete: Menghapus data dari LevelDB berdasarkan Key
+func (s *LevelDBStore) Delete(key string) error {
+    return s.db.Delete([]byte(key), nil)
+}
+
+// Tambahkan ini di engine.go Core jika ingin menggunakan Batch untuk Delete
+func (s *LevelDBStore) DeleteFromBatch(batch Batch, key string) error {
+    b, ok := batch.(*leveldb.Batch)
+    if !ok {
+        return fmt.Errorf("batch tidak valid")
+    }
+    b.Delete([]byte(key))
+    return nil
+}
+
 
 func (s *LevelDBStore) Close() error { return s.db.Close() }

@@ -120,7 +120,7 @@ type BVMKeeper interface {
     CommitBlock(block types.Block) error
 
 	//Reward
-    DistributeBlockReward(height int64, fees uint64) (uint64, uint64, error)
+    DistributeBlockReward(height int64, fees uint64, batch storage.Batch) (uint64, uint64, error)
     GetSubsidiAtHeight(height int64, validatorCount int) uint64
 
     // 🚩 TAMBAHKAN INI agar API Sultan bisa memanggilnya:

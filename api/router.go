@@ -35,6 +35,7 @@ func NewRouter(k x.BVMKeeper, mp x.MempoolKeeper, store storage.BVMStore, nodeAd
 
 	// --- 4. EXPLORER & UTILITY ---
 	mux.HandleFunc("/api/history", HandleAddressHistory(store))
+	mux.HandleFunc("/api/holders", HandleHolders(k))
 	mux.HandleFunc("/api/search", HandleSearchUser(k))
 	mux.HandleFunc("/api/inspect", HandleInspect(nodeAddr))
         mux.HandleFunc("/api/events", HandleGetEvents)

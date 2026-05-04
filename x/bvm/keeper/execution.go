@@ -208,7 +208,7 @@ func (k *Keeper) ExecuteBlock(block types.Block) error {
 
     // --- 2. DISTRIBUSI REWARD BLOK (BVM) ---
     // A. Ambil data hadiah (Sudah termasuk subsidi per kepala + tip fee)
-    minerReward, _, _ := k.DistributeBlockReward(int64(block.Index), totalFees)
+    minerReward, _, _ := k.DistributeBlockReward(int64(block.Index), totalFees, batch) // ✅ Fixed!
 
     // B. Ambil angka share subsidi murni (Untuk validator selain miner)
     vCount := k.GetValidatorCount()

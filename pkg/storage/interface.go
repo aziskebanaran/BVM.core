@@ -25,6 +25,9 @@ type BVMStore interface {
     PutHistoryToBatch(batch Batch, addr string, tx types.Transaction) error
     WriteBatch(batch Batch) error
     Scan(prefix string) (map[string]interface{}, error)
+    Delete(key string) error
+    DeleteFromBatch(batch Batch, key string) error
+
 
     Close() error
 }

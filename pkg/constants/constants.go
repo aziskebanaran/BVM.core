@@ -22,6 +22,8 @@ const (
 
     MinValidatorStake = 1000.0 
 
+    GameVaultAddress = "bvmf_market_system_vault"
+
 )
 
 // --- FUNGSI DINAMIS PORT (PENTING!) ---

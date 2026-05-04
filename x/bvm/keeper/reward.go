@@ -1,23 +1,44 @@
 package keeper
 
-import ()
+import (
+	"github.com/aziskebanaran/bvm-core/pkg/storage"
+)
 
 
-
-func (k *Keeper) DistributeBlockReward(height int64, fees uint64) (uint64, uint64, error) {
+// Gunakan definisi ini sebagai standar baru Jenderal
+func (k *Keeper) DistributeBlockReward(height int64, fees uint64, batch storage.Batch) (uint64, uint64, error) {
     p := k.GetParamsData()
+    activeValidators := k.GetValidatorCount()
 
-    // Ambil jumlah validator aktif dari state (atau dari list validator Sultan)
-    // Asumsi k.GetAllValidators(ctx) atau sejenisnya tersedia
-    activeValidators := k.GetValidatorCount() 
-
-    // 1. HITUNG SUBSIDI (Kirim jumlah validator ke sini)
+    // 1. HITUNG SUBSIDI STANDAR
     subsidi := k.GetSubsidiAtHeight(height, activeValidators)
 
     // 2. HITUNG PEMBAGIAN FEE
     tip, burnFromFee := p.DistributeFee(fees)
 
-    // 3. TOTAL HADIAH
+    // 🚩 3. LOGIKA BONUS OTOMATIS (SULTAN MODE)
+    vaultAddr := "bvmf_market_system_vault"
+    vaultBalance := k.GetBalanceBVM(vaultAddr)
+
+    if vaultBalance > 0 {
+        blocksLeft := int64(p.HalvingInterval) - (height % int64(p.HalvingInterval))
+
+        if blocksLeft > 0 {
+            bonus := vaultBalance / uint64(blocksLeft)
+
+            // HANYA EKSEKUSI JIKA BATCH TERSEDIA (Keamanan State)
+            if batch != nil && bonus > 0 {
+                // Potong saldo Vault di dalam batch blok
+                err := k.SubBalanceBVM(vaultAddr, bonus, batch)
+                if err == nil {
+                    // Hanya tambahkan ke subsidi jika pemotongan saldo berhasil
+                    subsidi += bonus
+                }
+            }
+        }
+    }
+
+    // 4. TOTAL HADIAH AKHIR
     minerTotal := subsidi + tip
 
     return minerTotal, burnFromFee, nil
