@@ -18,3 +18,18 @@ func (k *Keeper) CallGovernance(method string, args ...interface{}) (interface{}
 
     return result, nil
 }
+
+// ProcessBridgeRelease: Menerima perintah dari Nexus untuk mencairkan koin via Governance
+func (k *Keeper) ProcessBridgeRelease(to string, amount uint64, ref string) error {
+    fmt.Printf("⛓️ [CORE-BRIDGE] Memproses permintaan pelepasan: %d BVM ke %s\n", amount, to)
+
+    // 1. Panggil Kontrak Governance untuk mengeksekusi pengiriman
+    // Kita gunakan CallGovernance yang sudah Jenderal buat di atas
+    _, err := k.CallGovernance("release_bridge_asset", to, amount, ref)
+    if err != nil {
+        return fmt.Errorf("❌ [GOV_REJECTED]: %v", err)
+    }
+
+    fmt.Printf("✅ [CORE-BRIDGE] Aset berhasil dilepaskan untuk ref: %s\n", ref)
+    return nil
+}

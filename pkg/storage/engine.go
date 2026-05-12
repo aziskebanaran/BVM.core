@@ -134,6 +134,7 @@ func (s *LevelDBStore) NewBatch() Batch {
         return &leveldb.Batch{}
 }
 
+
 // Gunakan tipe Batch untuk argumen pertama
 func (s *LevelDBStore) PutToBatch(batch Batch, key string, value interface{}) error {
         b, ok := batch.(*leveldb.Batch) // Casting ini tetap diperlukan dan sudah benar
@@ -250,6 +251,14 @@ func (s *LevelDBStore) DeleteFromBatch(batch Batch, key string) error {
     }
     b.Delete([]byte(key))
     return nil
+}
+
+func (s *LevelDBStore) PutRaw(key []byte, value []byte) error {
+    return s.db.Put(key, value, nil)
+}
+
+func (s *LevelDBStore) GetRaw(key []byte) ([]byte, error) {
+    return s.db.Get(key, nil)
 }
 
 

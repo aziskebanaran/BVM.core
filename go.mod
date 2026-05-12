@@ -3,7 +3,7 @@ module github.com/aziskebanaran/bvm-core
 go 1.26.2
 
 require (
-	github.com/aziskebanaran/bvm-lib v1.0.2
+	github.com/aziskebanaran/bvm-lib v1.0.3
 	github.com/cbergoon/merkletree v0.2.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/joho/godotenv v1.5.1

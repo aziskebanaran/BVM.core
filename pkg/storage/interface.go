@@ -17,6 +17,8 @@ type BVMStore interface {
     GetBlockByHeight(height int) (types.Block, error)
     LoadFullChain() ([]types.Block, error)
 
+    PutRaw(key []byte, value []byte) error
+    GetRaw(key []byte) ([]byte, error)
     // 🚩 2. Gunakan tipe Batch yang sudah didefinisikan tadi
     GetLatestBlocks(limit int) ([]types.Block, error)
     PrefixScan(prefix string) ([][]byte, error)

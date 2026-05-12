@@ -3,6 +3,7 @@ package keeper
 import (
     "github.com/aziskebanaran/bvm-core/x/bvm/types"
     "github.com/aziskebanaran/bvm-core/pkg/logger"
+    "github.com/aziskebanaran/bvm-core/pkg/storage"
     "fmt"
     "strings"
     "time"
@@ -102,3 +103,25 @@ func (k *Keeper) GetNextDifficulty() int {
     return k.GetNextDifficultyForMiner("")
 }
 
+
+func (k *Keeper) PromoteMinerToValidator(minerAddr string, batch storage.Batch) {
+    staking := k.GetStaking()
+    if staking == nil { return }
+
+    // 1. Cek apakah sudah jadi validator
+    validators := staking.GetValidators()
+    for _, v := range validators {
+        if v.Address == minerAddr {
+            return // Sudah terdaftar, batalkan promosi
+        }
+    }
+
+    // 2. Jika belum, buat profil validator baru (Ghost Stake)
+    // Kita berikan 1.000.000 unit (1 BVM) sebagai modal awal
+    // Gunakan staking.AutoDelegate atau akses langsung ke k.Staking.SetValidator jika tersedia
+    err := staking.AutoDelegate(minerAddr, 1000000) 
+
+    if err == nil {
+        logger.Success("STAKING", fmt.Sprintf("🎖️ [AUTO-PROMOTION] Miner %s naik pangkat menjadi Validator!", minerAddr[:12]))
+    }
+}

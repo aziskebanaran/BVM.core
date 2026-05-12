@@ -7,13 +7,19 @@ import (
 )
 
 type InventoryManager struct {
-    db *storage.KVStore
+    // 🚩 PERBAIKAN: Hapus tanda bintang (*). BVMStore adalah interface.
+    db storage.BVMStore 
+}
+
+// NewInventoryManager: Tambahkan inisialisasi agar aman
+func NewInventoryManager(db storage.BVMStore) *InventoryManager {
+    return &InventoryManager{db: db}
 }
 
 // SaveInventory: Simpan tas ke LevelDB
 func (m *InventoryManager) SaveInventory(inv game.Inventory) error {
     key := fmt.Sprintf("inv:%s", inv.OwnerAddress)
-    // Langsung simpan struct! KVStore Jenderal yang sudah pakai Msgpack akan urus sisanya.
+    // Sekarang m.db.Put akan terbaca dengan benar
     return m.db.Put(key, inv)
 }
 
@@ -21,8 +27,8 @@ func (m *InventoryManager) SaveInventory(inv game.Inventory) error {
 func (m *InventoryManager) LoadInventory(playerAddr string) (*game.Inventory, error) {
     key := fmt.Sprintf("inv:%s", playerAddr)
     var inv game.Inventory
-    
-    // KVStore akan Unmarshal otomatis dari byte ke struct
+
+    // Sekarang m.db.Get akan terbaca dengan benar
     err := m.db.Get(key, &inv)
     if err != nil {
         return nil, err
